@@ -1,5 +1,5 @@
 // URL of the M3U playlist
-const playlistUrl = "https://raw.githubusercontent.com/livetv2025/livetv2025.github.io/refs/heads/main/iptv.cache-8.m3u";
+const playlistUrl = "https://raw.githubusercontent.com/MohammadKobirShah/KobirIPTV/refs/heads/main/1DistroTV.m3u";
 
 // Function to fetch and parse the M3U playlist
 async function fetchPlaylist(url) {
