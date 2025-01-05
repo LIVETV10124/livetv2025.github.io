@@ -1,5 +1,4 @@
-// URL of the M3U playlist
-const playlistUrl = "https://raw.githubusercontent.com/MohammadKobirShah/KobirIPTV/refs/heads/main/1DistroTV.m3u";
+const playlistUrl = "https://raw.githubusercontent.com/livetv2025/livetv2025.github.io/refs/heads/main/iptv.cache-8.m3u";
 
 // Function to fetch and parse the M3U playlist
 async function fetchPlaylist(url) {
@@ -12,7 +11,7 @@ async function fetchPlaylist(url) {
     }
 }
 
-// Function to parse M3U file content
+// Function to parse M3U content
 function parseM3U(data) {
     const channels = [];
     const lines = data.split("\n");
@@ -35,20 +34,23 @@ function parseM3U(data) {
     return channels;
 }
 
-// Function to load channels into the grid
+// Function to display channels on the page
 function loadChannels(channels) {
     const gridContainer = document.getElementById("channel-grid");
+
+    if (!channels || channels.length === 0) {
+        gridContainer.innerHTML = "<p>No channels found in the playlist.</p>";
+        return;
+    }
 
     channels.forEach((channel) => {
         const card = document.createElement("div");
         card.className = "card";
+        card.onclick = () => playStream(channel.url);
 
         card.innerHTML = `
             <img src="${channel.logo}" alt="${channel.name}" class="channel-logo">
-            <div class="epg">
-                <p><strong>${channel.name}</strong></p>
-                <button onclick="playStream('${channel.url}')">Watch Now</button>
-            </div>
+            <div class="channel-name">${channel.name}</div>
         `;
 
         gridContainer.appendChild(card);
