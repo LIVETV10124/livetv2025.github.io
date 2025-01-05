@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live TV Streaming</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Live TV Streaming</h1>
+        <div class="video-player">
+            <video id="live-video" width="100%" controls>
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div class="playlist">
+            <button onclick="loadStream('http://example.com/live.m3u8')">HLS Stream</button>
+            <button onclick="loadStream('http://example.com/video.mpd')">DASH Stream</button>
+            <button onclick="loadStream('http://example.com/drm-video.mpd')">DRM Stream</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dashjs@latest"></script>
+    <script src="script.js"></script>
+</body>
+</html>
