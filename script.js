@@ -1,40 +1,88 @@
-// Check if HLS.js is supported in the browser
-function isHLSSupported() {
-    return Hls.isSupported();
-}
+// URL of the M3U playlist
+const playlistUrl = "https://raw.githubusercontent.com/livetv2025/livetv2025.github.io/refs/heads/main/iptv.cache-8.m3u";
 
-// Check if DASH.js is supported in the browser
-function isDASHSupported() {
-    return dashjs.MediaPlayerFactory.isSupported();
-}
-
-// Load the stream based on the type of stream (HLS, DASH, DRM)
-function loadStream(streamUrl) {
-    const videoElement = document.getElementById('live-video');
-
-    // If HLS is supported, load using HLS.js
-    if (isHLSSupported() && streamUrl.endsWith('.m3u8')) {
-        const hls = new Hls();
-        hls.loadSource(streamUrl);
-        hls.attachMedia(videoElement);
-        hls.on(Hls.Events.MANIFEST_PARSED, function() {
-            videoElement.play();
-        });
-    } 
-    // If DASH is supported, load using DASH.js
-    else if (isDASHSupported() && streamUrl.endsWith('.mpd')) {
-        const player = dashjs.MediaPlayerFactory.create();
-        player.initialize(videoElement, streamUrl, true);
-        videoElement.play();
-    }
-    // Otherwise, fall back to simple HTML5 video for non-supported formats
-    else {
-        videoElement.src = streamUrl;
-        videoElement.play();
+// Function to fetch and parse the M3U playlist
+async function fetchPlaylist(url) {
+    try {
+        const response = await fetch(url);
+        const text = await response.text();
+        return parseM3U(text);
+    } catch (error) {
+        console.error("Error fetching playlist:", error);
     }
 }
 
-// Event listener to load the default stream or show a message
-document.addEventListener("DOMContentLoaded", () => {
-    loadStream('http://example.com/live.m3u8'); // Replace with your default stream URL
+// Function to parse M3U file content
+function parseM3U(data) {
+    const channels = [];
+    const lines = data.split("\n");
+
+    let currentChannel = {};
+    lines.forEach((line) => {
+        if (line.startsWith("#EXTINF")) {
+            const match = line.match(/#EXTINF:-?\d+,(.+)/);
+            currentChannel.name = match ? match[1].trim() : "Unknown Channel";
+
+            const logoMatch = line.match(/tvg-logo="([^"]+)"/);
+            currentChannel.logo = logoMatch ? logoMatch[1] : "https://via.placeholder.com/150";
+        } else if (line.startsWith("http")) {
+            currentChannel.url = line.trim();
+            channels.push({ ...currentChannel });
+            currentChannel = {};
+        }
+    });
+
+    return channels;
+}
+
+// Function to load channels into the grid
+function loadChannels(channels) {
+    const gridContainer = document.getElementById("channel-grid");
+
+    channels.forEach((channel) => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <img src="${channel.logo}" alt="${channel.name}" class="channel-logo">
+            <div class="epg">
+                <p><strong>${channel.name}</strong></p>
+                <button onclick="playStream('${channel.url}')">Watch Now</button>
+            </div>
+        `;
+
+        gridContainer.appendChild(card);
+    });
+}
+
+// Function to play the selected stream
+function playStream(url) {
+    const videoPlayer = document.createElement("div");
+    videoPlayer.className = "video-player-overlay";
+
+    videoPlayer.innerHTML = `
+        <div class="video-player">
+            <video controls autoplay>
+                <source src="${url}" type="application/x-mpegURL">
+                Your browser does not support the video tag.
+            </video>
+            <button class="close-btn" onclick="closePlayer()">Close</button>
+        </div>
+    `;
+
+    document.body.appendChild(videoPlayer);
+}
+
+// Function to close the video player
+function closePlayer() {
+    const player = document.querySelector(".video-player-overlay");
+    if (player) {
+        player.remove();
+    }
+}
+
+// Initialize the app
+document.addEventListener("DOMContentLoaded", async () => {
+    const channels = await fetchPlaylist(playlistUrl);
+    loadChannels(channels);
 });
