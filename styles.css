@@ -1,117 +1,94 @@
-/* General Styles */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
+const playlistUrl = "https://raw.githubusercontent.com/livetv2025/livetv2025.github.io/refs/heads/main/iptv.cache-8.m3u";
+
+// Function to fetch and parse the M3U playlist
+async function fetchPlaylist(url) {
+    try {
+        const response = await fetch(url);
+        const text = await response.text();
+        console.log("Fetched Playlist Content:", text); // Debugging log
+        return parseM3U(text);
+    } catch (error) {
+        console.error("Error fetching playlist:", error);
+    }
 }
 
-header {
-    background-color: #007bff;
-    color: white;
-    text-align: center;
-    padding: 20px 0;
+// Function to parse M3U content
+function parseM3U(data) {
+    const channels = [];
+    const lines = data.split("\n");
+
+    let currentChannel = {};
+    lines.forEach((line) => {
+        if (line.startsWith("#EXTINF")) {
+            const match = line.match(/#EXTINF:-?\d+,(.+)/);
+            currentChannel.name = match ? match[1].trim() : "Unknown Channel";
+
+            const logoMatch = line.match(/tvg-logo="([^"]+)"/);
+            currentChannel.logo = logoMatch ? logoMatch[1] : "https://via.placeholder.com/150";
+        } else if (line.startsWith("http")) {
+            currentChannel.url = line.trim();
+            channels.push({ ...currentChannel });
+            currentChannel = {};
+        }
+    });
+
+    console.log("Parsed Channels:", channels); // Debugging log
+    return channels;
 }
 
-h1 {
-    margin: 0;
-    font-size: 2rem;
+// Function to display channels on the page
+function loadChannels(channels) {
+    const gridContainer = document.getElementById("channel-grid");
+
+    if (!channels || channels.length === 0) {
+        gridContainer.innerHTML = "<p>No channels found in the playlist.</p>";
+        return;
+    }
+
+    channels.forEach((channel) => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <img src="${channel.logo}" alt="${channel.name}" class="channel-logo">
+            <div class="epg">
+                <p><strong>${channel.name}</strong></p>
+                <button onclick="playStream('${channel.url}')">Watch Now</button>
+            </div>
+        `;
+
+        gridContainer.appendChild(card);
+    });
 }
 
-/* Grid Layout */
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+// Function to play the selected stream
+function playStream(url) {
+    const videoPlayer = document.createElement("div");
+    videoPlayer.className = "video-player-overlay";
+
+    videoPlayer.innerHTML = `
+        <div class="video-player">
+            <video controls autoplay>
+                <source src="${url}" type="application/x-mpegURL">
+                Your browser does not support the video tag.
+            </video>
+            <button class="close-btn" onclick="closePlayer()">Close</button>
+        </div>
+    `;
+
+    document.body.appendChild(videoPlayer);
 }
 
-/* Card Styles */
-.card {
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    text-align: center;
-    transition: transform 0.2s;
+// Function to close the video player
+function closePlayer() {
+    const player = document.querySelector(".video-player-overlay");
+    if (player) {
+        player.remove();
+    }
 }
 
-.card:hover {
-    transform: scale(1.05);
-}
-
-.channel-logo {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-}
-
-.epg {
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-top: 1px solid #ddd;
-}
-
-.epg p {
-    margin: 5px 0;
-    font-size: 14px;
-}
-
-.epg button {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.epg button:hover {
-    background-color: #0056b3;
-}
-
-/* Video Player Overlay */
-.video-player-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.video-player {
-    position: relative;
-    width: 80%;
-    max-width: 800px;
-    background: black;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.video-player video {
-    width: 100%;
-    height: auto;
-}
-
-.close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: red;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.close-btn:hover {
-    background: darkred;
-}
+// Initialize the app
+document.addEventListener("DOMContentLoaded", async () => {
+    const channels = await fetchPlaylist(playlistUrl);
+    loadChannels(channels);
+});
