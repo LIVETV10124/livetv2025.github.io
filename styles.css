@@ -1,3 +1,4 @@
+/* General Styles */
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
@@ -5,27 +6,59 @@ body {
     padding: 0;
 }
 
-.container {
-    width: 80%;
-    margin: 0 auto;
-    padding: 20px;
-    text-align: center;
-}
-
-.video-player {
-    margin-bottom: 20px;
-}
-
-.playlist button {
-    padding: 10px 20px;
-    font-size: 16px;
-    margin: 10px;
+header {
     background-color: #007bff;
     color: white;
-    border: none;
-    cursor: pointer;
+    text-align: center;
+    padding: 20px 0;
 }
 
-.playlist button:hover {
-    background-color: #0056b3;
+h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+/* Grid Container */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Card Styles */
+.card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.channel-logo {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.epg {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+.epg p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.epg strong {
+    color: #007bff;
 }
