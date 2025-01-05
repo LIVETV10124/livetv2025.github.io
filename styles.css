@@ -1,0 +1,31 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+.video-player {
+    margin-bottom: 20px;
+}
+
+.playlist button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.playlist button:hover {
+    background-color: #0056b3;
+}
