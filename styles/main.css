@@ -1,83 +1,122 @@
-/* General Styles */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    margin: 0;
-    padding: 0;
-    color: #333;
+const m3uUrl = "https://example.com/your-m3u-file.m3u"; // Replace with your M3U link
+
+const gridContainer = document.querySelector('.grid-container');
+const searchInput = document.getElementById('search-input');
+const categorySelect = document.getElementById('category-select');
+const playerModal = document.getElementById('player-modal');
+const shakaPlayer = document.getElementById('shaka-player');
+const closePlayerBtn = document.getElementById('close-player');
+
+let allChannels = [];
+
+// Load channels on page load
+window.onload = async function () {
+  await loadChannels();
+  initSearchAndCategory();
+};
+
+// Parse and load M3U channels
+async function loadChannels() {
+  try {
+    const response = await fetch(m3uUrl);
+    const text = await response.text();
+    allChannels = parseM3U(text);
+    renderChannels(allChannels);
+    populateCategories(allChannels);
+  } catch (error) {
+    console.error('Error loading M3U file:', error);
+  }
 }
 
-header {
-    background-color: #1e1e2d;
-    color: white;
-    text-align: center;
-    padding: 15px 0;
-    font-size: 1.5rem;
-    font-weight: bold;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-}
+// Parse M3U file
+function parseM3U(m3uText) {
+  const lines = m3uText.split('\n');
+  const channels = [];
+  let channel = {};
 
-/* Grid Layout */
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
-    padding: 15px;
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-/* Card Styles */
-.card {
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    text-align: center;
-}
-
-.card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-.channel-logo {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-    background-color: #f0f0f0;
-}
-
-.channel-name {
-    padding: 10px;
-    font-size: 1rem;
-    font-weight: bold;
-    background-color: #f7f7f7;
-    color: #333;
-}
-
-/* Responsive Design */
-@media screen and (max-width: 768px) {
-    header {
-        font-size: 1.2rem;
+  lines.forEach((line) => {
+    if (line.startsWith('#EXTINF')) {
+      const info = line.match(/#EXTINF:.*?,(.*)/);
+      const group = line.match(/group-title="([^"]+)"/);
+      channel.name = info[1];
+      channel.group = group ? group[1] : 'Uncategorized';
+    } else if (line.startsWith('http')) {
+      channel.url = line;
+      channels.push(channel);
+      channel = {};
     }
-    .grid-container {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    }
-    .channel-logo {
-        height: 100px;
-    }
+  });
+
+  return channels;
 }
 
-@media screen and (max-width: 480px) {
-    .grid-container {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    }
-    .channel-logo {
-        height: 80px;
-    }
+// Render channels
+function renderChannels(channels) {
+  gridContainer.innerHTML = '';
+
+  channels.forEach((channel) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <img src="https://via.placeholder.com/150?text=${channel.name}" alt="${channel.name}">
+      <p class="card-title">${channel.name}</p>
+    `;
+    card.addEventListener('click', () => playChannel(channel.url));
+    gridContainer.appendChild(card);
+  });
+}
+
+// Populate category dropdown
+function populateCategories(channels) {
+  const categories = new Set(channels.map((channel) => channel.group));
+  categories.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    categorySelect.appendChild(option);
+  });
+}
+
+// Play channel using Shaka Player
+function playChannel(url) {
+  shakaPlayer.src = url;
+
+  shakaPlayer.addEventListener('error', (event) => {
+    console.error('Shaka Player Error:', event.detail);
+  });
+
+  if (shaka.Player.isBrowserSupported()) {
+    const player = new shaka.Player(shakaPlayer);
+    player.load(url).catch((error) => console.error('Error loading channel:', error));
+  } else {
+    alert('Shaka Player is not supported on this browser.');
+  }
+
+  playerModal.style.display = 'flex';
+}
+
+// Close player
+closePlayerBtn.addEventListener('click', () => {
+  shakaPlayer.pause();
+  playerModal.style.display = 'none';
+});
+
+// Search and category filter
+function initSearchAndCategory() {
+  searchInput.addEventListener('input', () => {
+    const searchText = searchInput.value.toLowerCase();
+    const filteredChannels = allChannels.filter((channel) =>
+      channel.name.toLowerCase().includes(searchText)
+    );
+    renderChannels(filteredChannels);
+  });
+
+  categorySelect.addEventListener('change', () => {
+    const selectedCategory = categorySelect.value;
+    const filteredChannels =
+      selectedCategory === 'all'
+        ? allChannels
+        : allChannels.filter((channel) => channel.group === selectedCategory);
+    renderChannels(filteredChannels);
+  });
 }
