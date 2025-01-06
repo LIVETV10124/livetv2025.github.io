@@ -1,16 +1,32 @@
-const m3uUrl = "https://raw.githubusercontent.com/MohammadKobirShah/KobirIPTV/refs/heads/main/KobirIPTV.m3u"; // Replace with your M3U link
+const m3uUrl = "https://raw.githubusercontent.com/MohammadKobirShah/KobirIPTV/refs/heads/main/KobirIPTV.m3u"; // Replace with your M3U URL
 
 const gridContainer = document.querySelector('.grid-container');
 const searchInput = document.getElementById('search-input');
 const categorySelect = document.getElementById('category-select');
 const playerModal = document.getElementById('player-modal');
-const shakaPlayer = document.getElementById('shaka-player');
+const shakaPlayerElement = document.getElementById('shaka-player');
 const closePlayerBtn = document.getElementById('close-player');
 
 let allChannels = [];
+let shakaPlayer = null;
+
+// Initialize the Shaka Player
+function initializeShakaPlayer() {
+  if (shaka.Player.isBrowserSupported()) {
+    shakaPlayer = new shaka.Player(shakaPlayerElement);
+
+    // Event listener for Shaka Player errors
+    shakaPlayer.addEventListener('error', (event) => {
+      console.error('Shaka Player Error:', event.detail);
+    });
+  } else {
+    alert('Shaka Player is not supported in this browser.');
+  }
+}
 
 // Load channels on page load
 window.onload = async function () {
+  initializeShakaPlayer();
   await loadChannels();
   initSearchAndCategory();
 };
@@ -36,14 +52,17 @@ function parseM3U(m3uText) {
 
   lines.forEach((line) => {
     if (line.startsWith('#EXTINF')) {
-      const info = line.match(/#EXTINF:.*?,(.*)/);
-      const group = line.match(/group-title="([^"]+)"/);
-      channel.name = info[1];
-      channel.group = group ? group[1] : 'Uncategorized';
+      const nameMatch = line.match(/#EXTINF:.*?,(.*)/);
+      const groupMatch = line.match(/group-title="([^"]+)"/);
+      const logoMatch = line.match(/tvg-logo="([^"]+)"/);
+
+      channel.name = nameMatch ? nameMatch[1] : 'Unknown';
+      channel.group = groupMatch ? groupMatch[1] : 'Uncategorized';
+      channel.logo = logoMatch ? logoMatch[1] : null;
     } else if (line.startsWith('http')) {
       channel.url = line;
       channels.push(channel);
-      channel = {};
+      channel = {}; // Reset for the next channel
     }
   });
 
@@ -58,7 +77,7 @@ function renderChannels(channels) {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
-      <img src="https://via.placeholder.com/150?text=${channel.name}" alt="${channel.name}">
+      <img src="${channel.logo || 'https://via.placeholder.com/150?text=No+Logo'}" alt="${channel.name}" class="channel-logo">
       <p class="card-title">${channel.name}</p>
     `;
     card.addEventListener('click', () => playChannel(channel.url));
@@ -79,26 +98,27 @@ function populateCategories(channels) {
 
 // Play channel using Shaka Player
 function playChannel(url) {
-  shakaPlayer.src = url;
-
-  shakaPlayer.addEventListener('error', (event) => {
-    console.error('Shaka Player Error:', event.detail);
-  });
-
-  if (shaka.Player.isBrowserSupported()) {
-    const player = new shaka.Player(shakaPlayer);
-    player.load(url).catch((error) => console.error('Error loading channel:', error));
-  } else {
-    alert('Shaka Player is not supported on this browser.');
+  if (!shakaPlayer) {
+    alert('Shaka Player is not initialized.');
+    return;
   }
 
-  playerModal.style.display = 'flex';
+  shakaPlayer.load(url).then(() => {
+    console.log('Channel loaded successfully:', url);
+    playerModal.style.display = 'flex';
+  }).catch((error) => {
+    console.error('Error loading channel:', error);
+  });
 }
 
 // Close player
 closePlayerBtn.addEventListener('click', () => {
-  shakaPlayer.pause();
-  playerModal.style.display = 'none';
+  shakaPlayer.unload().then(() => {
+    console.log('Player unloaded.');
+    playerModal.style.display = 'none';
+  }).catch((error) => {
+    console.error('Error unloading player:', error);
+  });
 });
 
 // Search and category filter
