@@ -1,19 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live TV Channels</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live TV</title>
+  <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
-    <header>
-        <h1>Live TV</h1>
-    </header>
-    <main class="grid-container" id="channel-grid">
-        <!-- Channels will be dynamically loaded here -->
-    </main>
+  <header class="header">
+    <h1>Live TV</h1>
+    <div class="search-category">
+      <input type="text" id="search-input" placeholder="Search channels...">
+      <select id="category-select">
+        <option value="all">All Categories</option>
+      </select>
+    </div>
+  </header>
 
-    <script src="script.js"></script>
+  <main class="grid-container">
+    <!-- Channels will be dynamically loaded here -->
+  </main>
+
+  <div id="player-modal" class="player-modal">
+    <div class="player-container">
+      <video id="shaka-player" controls autoplay></video>
+      <button id="close-player">✖</button>
+    </div>
+  </div>
+
+  <script src="scripts/shaka-player.min.js"></script>
+  <script src="scripts/app.js"></script>
 </body>
 </html>
