@@ -4,7 +4,7 @@ const gridContainer = document.querySelector('.grid-container');
 const searchInput = document.getElementById('search-input');
 const categorySelect = document.getElementById('category-select');
 const playerModal = document.getElementById('player-modal');
-const shakaPlayerElement = document.getElementById('shaka-player');
+const shakaPlayerElement = document.getElementById('jquery');
 const closePlayerBtn = document.getElementById('close-player');
 
 let allChannels = [];
